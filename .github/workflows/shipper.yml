@@ -1,0 +1,96 @@
+name: Shipper Deploy
+
+on:
+  workflow_call:
+    inputs:
+      shipper_file:
+        description: "Path to shipper.yml"
+        type: string
+        default: "./shipper.yml"
+      project:
+        description: "Project to deploy"
+        type: string
+        required: false
+      profile:
+        description: "Profile to use"
+        type: string
+        required: false
+
+env:
+  COMPOSER_PROCESS_TIMEOUT: 0
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: php-actions/setup-php@v6
+        with:
+          php-version: "8.3"
+
+      - name: Install Shipper
+        run: composer global require shippercli/cli --no-interaction
+
+      - name: Run Validation
+        run: |
+          shipper validate
+        env:
+          PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+          CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: php-actions/setup-php@v6
+        with:
+          php-version: "8.3"
+
+      - name: Install Shipper
+        run: composer global require shippercli/cli --no-interaction
+
+      - name: Run Planning
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.project }}" ]; then ARGS="$ARGS --project=${{ inputs.project }}"; fi
+          if [ -n "${{ inputs.profile }}" ]; then ARGS="$ARGS --profile=${{ inputs.profile }}"; fi
+          shipper plan $ARGS
+        env:
+          PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+          CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: php-actions/setup-php@v6
+        with:
+          php-version: "8.3"
+
+      - name: Install Shipper
+        run: composer global require shippercli/cli --no-interaction
+
+      - name: Run Deployment
+        run: |
+          ARGS="--force"
+          if [ -n "${{ inputs.project }}" ]; then ARGS="$ARGS --project=${{ inputs.project }}"; fi
+          if [ -n "${{ inputs.profile }}" ]; then ARGS="$ARGS --profile=${{ inputs.profile }}"; fi
+          shipper apply $ARGS
+        env:
+          PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+          CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
