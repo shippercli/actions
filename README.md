@@ -13,6 +13,8 @@ Use the composite action when a workflow should run the Shipper CLI with an isol
     project: myapp
     profile: production
     force: true
+    providers: |
+      shippercli/provider-ploi:^1.0
 ```
 
 The action downloads versioned CLI binaries from the `shippercli/cli` releases. The reusable workflow below is a separate job-level integration.
