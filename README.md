@@ -2,6 +2,21 @@
 
 Reusable GitHub Actions for Shipper deployments.
 
+## Composite Action
+
+Use the composite action when a workflow should run the Shipper CLI without installing PHP or Composer:
+
+```yaml
+- uses: shippercli/actions/.github/actions/shipper@v1.0.0
+  with:
+    command: apply
+    project: myapp
+    profile: production
+    force: true
+```
+
+The action downloads versioned CLI binaries from the `shippercli/cli` releases. The reusable workflow below is a separate job-level integration.
+
 ## Quick Start
 
 ```yaml
