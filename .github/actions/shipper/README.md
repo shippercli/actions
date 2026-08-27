@@ -1,174 +1,73 @@
-# Example: Using Shipper CLI in GitHub Actions
+# Shipper CLI GitHub Action
 
-This directory contains example workflows demonstrating how to use the Shipper CLI action in your own repositories.
+This composite action installs Shipper and provider plugins into an isolated Composer tool directory, then runs the CLI against the checked-out application. It does not modify the application's `composer.json`, `composer.lock`, or `vendor` directory.
 
-## Basic Usage
+## Usage
 
 ```yaml
-name: Deploy with Shipper
+name: Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Validate Configuration
-        uses: shippercli/cli/.github/actions/shipper@main
-        with:
-          command: validate
-      
-      - name: Deploy to Production
-        uses: shippercli/cli/.github/actions/shipper@main
+      - uses: shippercli/actions/.github/actions/shipper@v1
         with:
           command: apply
           project: api
           profile: production
           force: true
+          cli-version: '^1.0'
+          providers: |
+            shippercli/provider-ploi:^1.0
         env:
-          PROVIDER_API_TOKEN: ${{ secrets.PROVIDER_API_TOKEN }}
+          PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
 ```
 
-## Multi-Project Deployment
+Install multiple providers in one tool environment:
 
 ```yaml
-name: Deploy Multiple Projects
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: [api, frontend]
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Deploy ${{ matrix.project }}
-        uses: shippercli/cli/.github/actions/shipper@main
-        with:
-          command: apply
-          project: ${{ matrix.project }}
-          profile: production
-          force: true
-        env:
-          PROVIDER_API_TOKEN: ${{ secrets.PROVIDER_API_TOKEN }}
+with:
+  providers: |
+    shippercli/provider-ploi:^1.0
+    shippercli/provider-cpanel:^1.0
+    shippercli/provider-forge:^1.0
 ```
 
-## Preview Deployments for Pull Requests
+The `providers` value contains one Composer package per line. Each package may include a Composer constraint after `:`. All packages are installed together with `shippercli/cli`, so plugin discovery sees them from the same Composer installation.
 
-```yaml
-name: Preview Deployment
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  preview:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Plan Preview Deployment
-        uses: shippercli/cli/.github/actions/shipper@main
-        with:
-          command: plan
-          project: api
-          profile: preview
-        env:
-          PROVIDER_API_TOKEN: ${{ secrets.PROVIDER_API_TOKEN }}
-          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
-          GITHUB_HEAD_REF: ${{ github.head_ref }}
-      
-      - name: Deploy Preview
-        uses: shippercli/cli/.github/actions/shipper@main
-        with:
-          command: apply
-          project: api
-          profile: preview
-          force: true
-        env:
-          PROVIDER_API_TOKEN: ${{ secrets.PROVIDER_API_TOKEN }}
-          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
-          GITHUB_HEAD_REF: ${{ github.head_ref }}
-```
-
-## Using a Specific Version
-
-```yaml
-- name: Deploy with Specific Version
-  uses: shippercli/cli/.github/actions/shipper@main
-  with:
-    command: apply
-    project: api
-    profile: production
-    version: v1.0.0  # Use a specific release
-    force: true
-  env:
-    PROVIDER_API_TOKEN: ${{ secrets.PROVIDER_API_TOKEN }}
-```
-
-## Custom Working Directory
-
-If your `shipper.yml` is not in the repository root:
-
-```yaml
-- name: Deploy from Subdirectory
-  uses: shippercli/cli/.github/actions/shipper@main
-  with:
-    command: apply
-    project: api
-    profile: production
-    working-directory: ./infrastructure
-    force: true
-  env:
-    PROVIDER_API_TOKEN: ${{ secrets.PROVIDER_API_TOKEN }}
-```
-
-## Available Commands
-
-- `validate`: Validate the shipper.yml configuration
-- `plan`: Show what changes would be made (dry-run)
-- `apply`: Execute the deployment
-- `status`: Print provider deployment state as JSON
-- `logs`: Print recent provider or application log lines
-- `rollback`: Restore a provider-managed release
-- `destroy`: Remove Shipper-managed deployment resources
-
-## Required Environment Variables
-
-Most commands require credentials documented by the installed provider package.
-Store them as GitHub Actions secrets and expose only the required variables to
-the Shipper step.
-
-For preview deployments, you may also need:
-
-- `GITHUB_PR_NUMBER`: Pull request number
-- `GITHUB_HEAD_REF`: Branch name for the PR
-
-## Action Inputs
+## Inputs
 
 | Input | Required | Default | Description |
-|-------|----------|---------|-------------|
-| `command` | Yes | - | The Shipper command to run |
-| `project` | No | - | The project name from shipper.yml |
-| `profile` | No | - | The deployment profile (production, staging, preview) |
-| `force` | No | false | Skip confirmation prompts |
+| --- | --- | --- | --- |
+| `command` | Yes | - | `validate`, `plan`, `apply`, `status`, `logs`, `rollback`, or `destroy` |
+| `project` | No | - | Project name from `shipper.yml` |
+| `profile` | No | - | Deployment profile |
+| `force` | No | `false` | Skip confirmation prompts |
 | `release` | No | - | Provider release identifier for rollback |
-| `lines` | No | - | Maximum log lines for the logs command |
-| `version` | No | latest | Version of shipper CLI to use |
-| `working-directory` | No | . | Directory containing shipper.yml |
+| `lines` | No | - | Maximum log lines |
+| `working-directory` | No | `.` | Directory containing `shipper.yml` |
+| `php-version` | No | `8.3` | PHP used for the isolated tool installation |
+| `cli-version` | No | `^1.0` | Composer constraint for `shippercli/cli` |
+| `providers` | Yes | - | Provider Composer packages, one per line |
 
-## Action Outputs
+## Installation and caching
+
+The action sets up PHP and Composer, then installs Shipper and all requested providers under `$RUNNER_TOOL_CACHE` (falling back to `$RUNNER_TEMP`). The cache key includes the runner OS, PHP version, CLI constraint, and canonical provider list. The application checkout is used only as the `working-directory` when running Shipper.
+
+Pin this action to a release tag or commit SHA, such as `@v1` or `@<sha>`, rather than `@main`.
+
+## Environment variables
+
+Provider credentials are passed through the action step's `env` block. See each provider package's documentation for the required variables. Preview deployments may also pass `GITHUB_PR_NUMBER` and `GITHUB_HEAD_REF`.
+
+## Output
 
 | Output | Description |
-|--------|-------------|
-| `exit-code` | Exit code from the shipper command |
+| --- | --- |
+| `exit-code` | Exit code returned by the Shipper command |
