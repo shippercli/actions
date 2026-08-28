@@ -1,0 +1,26 @@
+providers:
+  cpanel:
+    host: "cpanel.example.com"
+    port: 2083
+    username: "${CPANEL_USERNAME}"
+    api_token: "${CPANEL_API_TOKEN}"
+
+projects:
+  app:
+    provider: cpanel
+    path: "."
+    web_directory: /public
+    profiles:
+      production:
+        branch: main
+        domain: "app.example.com"
+        deploy_path: "/app"
+        runtime:
+          type: php
+          version: "8.4"
+          install_dependencies: true
+        cpanel:
+          domain_type: existing
+          backup_before_deploy: true
+          release_retention: 5
+
