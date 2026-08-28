@@ -29,7 +29,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@v1
+    uses: shippercli/actions/.github/workflows/shipper.yml@ecfd4ef43b8bcf848cd69493ad52637973a30b3c
     with:
       providers: |
         shippercli/provider-cpanel:^1.0
@@ -47,7 +47,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@v1
+    uses: shippercli/actions/.github/workflows/shipper.yml@ecfd4ef43b8bcf848cd69493ad52637973a30b3c
     with:
       project: myapp
       profile: production
@@ -91,7 +91,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@v1
+    uses: shippercli/actions/.github/workflows/shipper.yml@ecfd4ef43b8bcf848cd69493ad52637973a30b3c
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
