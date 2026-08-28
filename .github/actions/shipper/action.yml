@@ -1,0 +1,206 @@
+name: 'Shipper CLI'
+description: 'Run Shipper CLI commands for declarative deployments'
+author: 'Shipper CLI'
+
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+
+inputs:
+  command:
+    description: 'The Shipper command (validate, plan, apply, status, logs, rollback, or destroy)'
+    required: true
+  project:
+    description: 'The project name from shipper.yml'
+    required: false
+  profile:
+    description: 'The deployment profile (e.g., production, staging, preview)'
+    required: false
+  force:
+    description: 'Skip confirmation prompts for mutating commands'
+    required: false
+    default: 'false'
+  release:
+    description: 'Provider release identifier for rollback'
+    required: false
+  lines:
+    description: 'Maximum log lines for the logs command'
+    required: false
+  cli-version:
+    description: 'Composer constraint for shippercli/cli'
+    required: false
+    default: '^1.0'
+  providers:
+    description: 'Provider Composer packages, one package and optional constraint per line'
+    required: true
+  php-version:
+    description: 'PHP version used to install and run Shipper'
+    required: false
+    default: '8.3'
+  working-directory:
+    description: 'Working directory containing shipper.yml'
+    required: false
+    default: '.'
+
+outputs:
+  exit-code:
+    description: 'Exit code from the shipper command'
+    value: ${{ steps.run-shipper.outputs.exit-code }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up PHP and Composer
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        tools: composer:v2
+        coverage: none
+
+    - name: Resolve isolated Shipper tool directory
+      id: resolve-tool
+      shell: bash
+      env:
+        PHP_VERSION: ${{ inputs.php-version }}
+        CLI_VERSION: ${{ inputs.cli-version }}
+        PROVIDERS: ${{ inputs.providers }}
+      run: |
+        set -euo pipefail
+
+        if [ -z "$PROVIDERS" ]; then
+          echo "providers must contain at least one Composer package" >&2
+          exit 1
+        fi
+
+        mapfile -t provider_packages < <(printf '%s\n' "$PROVIDERS" | sed -e 's/[[:space:]]*$//' -e '/^$/d' | sort -u)
+        if [ "${#provider_packages[@]}" -eq 0 ]; then
+          echo "providers must contain at least one non-empty package" >&2
+          exit 1
+        fi
+
+        for package in "${provider_packages[@]}"; do
+          package_name="${package%%:*}"
+          if [[ "$package" == -* || ! "$package_name" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+            echo "Invalid provider package: $package" >&2
+            exit 1
+          fi
+        done
+
+        providers_file="$RUNNER_TEMP/shipper-providers"
+        printf '%s\n' "${provider_packages[@]}" > "$providers_file"
+        providers_hash=$(sha256sum "$providers_file" | cut -d ' ' -f1)
+        cli_hash=$(printf '%s' "$CLI_VERSION" | sha256sum | cut -d ' ' -f1)
+        base_home="${RUNNER_TOOL_CACHE:-$RUNNER_TEMP}/shipper"
+        shipper_home="$base_home/$PHP_VERSION/$cli_hash/$providers_hash"
+
+        printf 'shipper-home=%s\n' "$shipper_home" >> "$GITHUB_OUTPUT"
+        printf 'cli-hash=%s\n' "$cli_hash" >> "$GITHUB_OUTPUT"
+        printf 'providers-hash=%s\n' "$providers_hash" >> "$GITHUB_OUTPUT"
+
+    - name: Cache Shipper tool installation
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.resolve-tool.outputs.shipper-home }}
+        key: shipper-${{ runner.os }}-${{ inputs.php-version }}-${{ steps.resolve-tool.outputs.cli-hash }}-${{ steps.resolve-tool.outputs.providers-hash }}
+
+    - name: Install Shipper and providers
+      shell: bash
+      env:
+        SHIPPER_HOME: ${{ steps.resolve-tool.outputs.shipper-home }}
+        CLI_VERSION: ${{ inputs.cli-version }}
+        PROVIDERS: ${{ inputs.providers }}
+      run: |
+        set -euo pipefail
+        if [ -x "$SHIPPER_HOME/vendor/bin/shipper" ]; then
+          exit 0
+        fi
+
+        mkdir -p "$SHIPPER_HOME"
+        cd "$SHIPPER_HOME"
+        if [ ! -f composer.json ]; then
+          composer init --no-interaction --name=shippercli/action-install
+        fi
+
+        mapfile -t provider_packages < <(printf '%s\n' "$PROVIDERS" | sed -e 's/[[:space:]]*$//' -e '/^$/d' | sort -u)
+        composer require --no-interaction --prefer-dist "shippercli/cli:$CLI_VERSION" "${provider_packages[@]}"
+
+    - name: Validate Shipper installation
+      shell: bash
+      env:
+        SHIPPER_HOME: ${{ steps.resolve-tool.outputs.shipper-home }}
+        PROVIDERS: ${{ inputs.providers }}
+      run: |
+        set -euo pipefail
+
+        if [ ! -x "$SHIPPER_HOME/vendor/bin/shipper" ]; then
+          echo "Shipper binary was not installed at $SHIPPER_HOME/vendor/bin/shipper" >&2
+          exit 1
+        fi
+
+        installed_providers="$RUNNER_TEMP/shipper-installed-providers"
+        php -r 'require $argv[1] . "/vendor/autoload.php"; foreach (Composer\InstalledVersions::getInstalledPackagesByType("shipper-plugin") as $package) { echo $package, PHP_EOL; }' "$SHIPPER_HOME" > "$installed_providers"
+
+        mapfile -t provider_packages < <(printf '%s\n' "$PROVIDERS" | sed -e 's/[[:space:]]*$//' -e '/^$/d' | sort -u)
+        for package in "${provider_packages[@]}"; do
+          package_name="${package%%:*}"
+          if ! grep -Fqx "$package_name" "$installed_providers"; then
+            echo "Provider package is not a shipper-plugin: $package_name" >&2
+            exit 1
+          fi
+        done
+
+        "$SHIPPER_HOME/vendor/bin/shipper" --version
+        printf '%s\n' "$SHIPPER_HOME/vendor/bin" >> "$GITHUB_PATH"
+
+    - name: Run Shipper Command
+      id: run-shipper
+      shell: bash
+      env:
+        COMMAND: ${{ inputs.command }}
+        PROJECT: ${{ inputs.project }}
+        PROFILE: ${{ inputs.profile }}
+        FORCE: ${{ inputs.force }}
+        RELEASE: ${{ inputs.release }}
+        LINES: ${{ inputs.lines }}
+        SHIPPER_HOME: ${{ steps.resolve-tool.outputs.shipper-home }}
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+
+        case "$COMMAND" in
+          validate|plan|apply|status|logs|rollback|destroy) ;;
+          *) echo "Unsupported Shipper command: $COMMAND" >&2; exit 2 ;;
+        esac
+
+        SHIPPER_BIN="$SHIPPER_HOME/vendor/bin/shipper"
+        ARGS=("$COMMAND")
+
+        if [ -n "${PROJECT:-}" ]; then
+          ARGS+=("$PROJECT")
+        fi
+
+        if [ -n "${PROFILE:-}" ]; then
+          ARGS+=("--profile=$PROFILE")
+        fi
+
+        if [ "${FORCE:-false}" = "true" ]; then
+          ARGS+=("--force")
+        fi
+
+        if [ -n "${RELEASE:-}" ]; then
+          ARGS+=("--release=$RELEASE")
+        fi
+
+        if [ -n "${LINES:-}" ]; then
+          ARGS+=("--lines=$LINES")
+        fi
+
+        # Execute command with proper argument passing
+        echo "Running: $SHIPPER_BIN ${ARGS[*]}"
+        set +e
+        "$SHIPPER_BIN" "${ARGS[@]}"
+        exit_code=$?
+        set -e
+
+        echo "exit-code=$exit_code" >> "$GITHUB_OUTPUT"
+        exit "$exit_code"

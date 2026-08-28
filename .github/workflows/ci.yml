@@ -1,0 +1,29 @@
+name: Composite Action CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and validate with cPanel provider
+        uses: ./.github/actions/shipper
+        with:
+          command: validate
+          working-directory: .github/actions/shipper/fixtures
+          cli-version: "^1.0"
+          providers: |
+            shippercli/provider-cpanel:^1.0
+        env:
+          CPANEL_USERNAME: action-test
+          CPANEL_API_TOKEN: action-test-token
+      - name: Verify CLI is available to subsequent steps
+        run: shipper --version
