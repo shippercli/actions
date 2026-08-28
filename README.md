@@ -14,10 +14,10 @@ Use the composite action when a workflow should run the Shipper CLI with an isol
     profile: production
     force: true
     providers: |
-      shippercli/provider-ploi:^1.0
+      shippercli/provider-cpanel:^1.0
 ```
 
-The action downloads versioned CLI binaries from the `shippercli/cli` releases. The reusable workflow below is a separate job-level integration.
+The action installs the requested `shippercli/cli` version and provider packages together in an isolated Composer tool directory. The reusable workflow below is a separate job-level integration.
 
 ## Quick Start
 
@@ -29,9 +29,12 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@main
+    uses: shippercli/actions/.github/workflows/shipper.yml@v1
+    with:
+      providers: |
+        shippercli/provider-cpanel:^1.0
     secrets:
-      PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+      CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
 
 ## With Specific Project/Profile
@@ -44,12 +47,14 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@main
+    uses: shippercli/actions/.github/workflows/shipper.yml@v1
     with:
       project: myapp
       profile: production
+      providers: |
+        shippercli/provider-cpanel:^1.0
     secrets:
-      PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+      CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
       FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
 ```
 
@@ -59,7 +64,7 @@ Configure these in your repository settings under `Settings > Secrets`:
 
 | Secret | Provider | Description |
 |--------|----------|-------------|
-| `PLOI_API_KEY` | Ploi | Your Ploi API key |
+| `CPANEL_API_TOKEN` | Ploi | Your Ploi API key |
 | `FORGE_API_TOKEN` | Forge | Your Forge API token |
 | `CPANEL_API_TOKEN` | cPanel | Your cPanel API token |
 
@@ -86,12 +91,14 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@main
+    uses: shippercli/actions/.github/workflows/shipper.yml@v1
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
+      providers: |
+        shippercli/provider-cpanel:^1.0
     secrets:
-      PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+      CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
 
 ## Local Development

@@ -1,6 +1,6 @@
 name: 'Shipper CLI'
 description: 'Run Shipper CLI commands for declarative deployments'
-author: 'Ulties'
+author: 'Shipper CLI'
 
 branding:
   icon: 'upload-cloud'
@@ -79,7 +79,8 @@ runs:
         fi
 
         for package in "${provider_packages[@]}"; do
-          if [[ "$package" == -* || ! "$package" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(:[A-Za-z0-9*.^~<>=|,+-]+)?$ ]]; then
+          package_name="${package%%:*}"
+          if [[ "$package" == -* || ! "$package_name" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
             echo "Invalid provider package: $package" >&2
             exit 1
           fi
@@ -88,17 +89,19 @@ runs:
         providers_file="$RUNNER_TEMP/shipper-providers"
         printf '%s\n' "${provider_packages[@]}" > "$providers_file"
         providers_hash=$(sha256sum "$providers_file" | cut -d ' ' -f1)
+        cli_hash=$(printf '%s' "$CLI_VERSION" | sha256sum | cut -d ' ' -f1)
         base_home="${RUNNER_TOOL_CACHE:-$RUNNER_TEMP}/shipper"
-        shipper_home="$base_home/$PHP_VERSION/$CLI_VERSION/$providers_hash"
+        shipper_home="$base_home/$PHP_VERSION/$cli_hash/$providers_hash"
 
         printf 'shipper-home=%s\n' "$shipper_home" >> "$GITHUB_OUTPUT"
+        printf 'cli-hash=%s\n' "$cli_hash" >> "$GITHUB_OUTPUT"
         printf 'providers-hash=%s\n' "$providers_hash" >> "$GITHUB_OUTPUT"
 
     - name: Cache Shipper tool installation
       uses: actions/cache@v4
       with:
         path: ${{ steps.resolve-tool.outputs.shipper-home }}
-        key: shipper-${{ runner.os }}-${{ inputs.php-version }}-${{ inputs.cli-version }}-${{ steps.resolve-tool.outputs.providers-hash }}
+        key: shipper-${{ runner.os }}-${{ inputs.php-version }}-${{ steps.resolve-tool.outputs.cli-hash }}-${{ steps.resolve-tool.outputs.providers-hash }}
 
     - name: Install Shipper and providers
       shell: bash
@@ -119,21 +122,34 @@ runs:
         fi
 
         mapfile -t provider_packages < <(printf '%s\n' "$PROVIDERS" | sed -e 's/[[:space:]]*$//' -e '/^$/d' | sort -u)
-        composer require --no-dev --no-interaction --prefer-dist "shippercli/cli:$CLI_VERSION" "${provider_packages[@]}"
+        composer require --no-interaction --prefer-dist "shippercli/cli:$CLI_VERSION" "${provider_packages[@]}"
 
-        installed=$(composer show --format=json)
-        for package in "${provider_packages[@]}"; do
-          package_name="${package%%:*}"
-          if ! printf '%s' "$installed" | jq -e --arg package "$package_name" '.installed[]? | select(.name == $package and .type == "shipper-plugin")' >/dev/null; then
-            echo "Provider package is not a shipper-plugin: $package_name" >&2
-            exit 1
-          fi
-        done
+    - name: Validate Shipper installation
+      shell: bash
+      env:
+        SHIPPER_HOME: ${{ steps.resolve-tool.outputs.shipper-home }}
+        PROVIDERS: ${{ inputs.providers }}
+      run: |
+        set -euo pipefail
 
         if [ ! -x "$SHIPPER_HOME/vendor/bin/shipper" ]; then
           echo "Shipper binary was not installed at $SHIPPER_HOME/vendor/bin/shipper" >&2
           exit 1
         fi
+
+        installed_providers="$RUNNER_TEMP/shipper-installed-providers"
+        php -r 'require $argv[1] . "/vendor/autoload.php"; foreach (Composer\InstalledVersions::getInstalledPackagesByType("shipper-plugin") as $package) { echo $package, PHP_EOL; }' "$SHIPPER_HOME" > "$installed_providers"
+
+        mapfile -t provider_packages < <(printf '%s\n' "$PROVIDERS" | sed -e 's/[[:space:]]*$//' -e '/^$/d' | sort -u)
+        for package in "${provider_packages[@]}"; do
+          package_name="${package%%:*}"
+          if ! grep -Fqx "$package_name" "$installed_providers"; then
+            echo "Provider package is not a shipper-plugin: $package_name" >&2
+            exit 1
+          fi
+        done
+
+        "$SHIPPER_HOME/vendor/bin/shipper" --version
 
     - name: Run Shipper Command
       id: run-shipper

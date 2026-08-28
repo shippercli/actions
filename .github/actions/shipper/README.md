@@ -24,19 +24,19 @@ jobs:
           force: true
           cli-version: '^1.0'
           providers: |
-            shippercli/provider-ploi:^1.0
+            shippercli/provider-cpanel:^1.0
         env:
-          PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+          CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
 
-Install multiple providers in one tool environment:
+When multiple provider packages are published, list each package in the same
+tool environment:
 
 ```yaml
 with:
   providers: |
-    shippercli/provider-ploi:^1.0
-    shippercli/provider-cpanel:^1.0
-    shippercli/provider-forge:^1.0
+    vendor/provider-one:^1.0
+    vendor/provider-two:^1.0
 ```
 
 The `providers` value contains one Composer package per line. Each package may include a Composer constraint after `:`. All packages are installed together with `shippercli/cli`, so plugin discovery sees them from the same Composer installation.
