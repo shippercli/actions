@@ -25,4 +25,5 @@ jobs:
         env:
           CPANEL_USERNAME: action-test
           CPANEL_API_TOKEN: action-test-token
-
+      - name: Verify CLI is available to subsequent steps
+        run: shipper --version

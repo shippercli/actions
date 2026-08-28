@@ -150,6 +150,7 @@ runs:
         done
 
         "$SHIPPER_HOME/vendor/bin/shipper" --version
+        printf '%s\n' "$SHIPPER_HOME/vendor/bin" >> "$GITHUB_PATH"
 
     - name: Run Shipper Command
       id: run-shipper

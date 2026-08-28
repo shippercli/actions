@@ -60,6 +60,10 @@ The `providers` value contains one Composer package per line. Each package may i
 
 The action sets up PHP and Composer, then installs Shipper and all requested providers under `$RUNNER_TOOL_CACHE` (falling back to `$RUNNER_TEMP`). The cache key includes the runner OS, PHP version, CLI constraint, and canonical provider list. The application checkout is used only as the `working-directory` when running Shipper.
 
+The isolated `vendor/bin` directory is added to `PATH` for later steps in the
+same job, so workflows can run additional `shipper` lifecycle or diagnostic
+commands without another installation.
+
 Pin this action to a release tag or commit SHA, such as `@v1` or `@<sha>`, rather than `@main`.
 
 ## Environment variables
