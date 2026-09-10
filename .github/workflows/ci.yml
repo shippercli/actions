@@ -14,6 +14,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate reusable workflow contract
+        run: |
+          ruby - <<'RUBY'
+          workflow = File.read('.github/workflows/shipper.yml')
+          provider_secrets = %w[CPANEL_API_TOKEN FORGE_API_TOKEN PLOI_API_KEY]
+
+          provider_secrets.each do |secret|
+            declarations = workflow.scan(/^      #{secret}:$/).length
+            environments = workflow.scan(/^          #{secret}: \$\{\{ secrets\.#{secret} \}\}$/).length
+            raise "#{secret} must be declared exactly once" unless declarations == 1
+            raise "#{secret} must be forwarded by all three jobs" unless environments == 3
+          end
+
+          pins = workflow.scan(%r{uses: shippercli/actions/\.github/actions/shipper@([^\s]+)}).flatten
+          raise 'expected validate, plan, and deploy action invocations' unless pins.length == 3
+          raise 'action references must use immutable 40-character SHAs' unless pins.all? { |pin| pin.match?(/\A[0-9a-f]{40}\z/) }
+          RUBY
       - name: Install and validate with cPanel provider
         uses: ./.github/actions/shipper
         with:
