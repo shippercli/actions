@@ -29,7 +29,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@ecfd4ef43b8bcf848cd69493ad52637973a30b3c
+    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
     with:
       providers: |
         shippercli/provider-cpanel:^1.0
@@ -47,7 +47,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@ecfd4ef43b8bcf848cd69493ad52637973a30b3c
+    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
     with:
       project: myapp
       profile: production
@@ -55,7 +55,6 @@ jobs:
         shippercli/provider-cpanel:^1.0
     secrets:
       CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
-      FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
 ```
 
 ## Secrets
@@ -64,9 +63,11 @@ Configure these in your repository settings under `Settings > Secrets`:
 
 | Secret | Provider | Description |
 |--------|----------|-------------|
-| `CPANEL_API_TOKEN` | Ploi | Your Ploi API key |
+| `PLOI_API_KEY` | Ploi | Your Ploi API key |
 | `FORGE_API_TOKEN` | Forge | Your Forge API token |
 | `CPANEL_API_TOKEN` | cPanel | Your cPanel API token |
+
+Reusable-workflow callers need to forward only the secret for each selected provider.
 
 ## Workflow Steps
 
@@ -91,7 +92,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@ecfd4ef43b8bcf848cd69493ad52637973a30b3c
+    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
