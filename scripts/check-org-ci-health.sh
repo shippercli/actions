@@ -34,7 +34,7 @@ while IFS=$'\t' read -r repository workflow; do
       -H 'User-Agent: shippercli-org-ci-health' \
       -H 'X-GitHub-Api-Version: 2022-11-28' \
       -H "Authorization: Bearer ${GITHUB_TOKEN:?GITHUB_TOKEN is required}" \
-      "${api_url}/repos/${repository}/actions/workflows/${workflow}/runs?per_page=1") || {
+      "${api_url}/repos/${repository}/actions/workflows/${workflow}/runs?per_page=1&status=completed") || {
         write_line "| \`$repository\` | \`$workflow\` | API error | unavailable |"
         failures=$((failures + 1))
         continue
