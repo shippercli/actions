@@ -15,8 +15,9 @@ JSON
 
 cat > "$tmp/healthy.json" <<'JSON'
 [
-  {"repository":"example/healthy","workflow":"ci.yml","total_count":1,"conclusion":"success","updated_at":"2026-09-24T00:00:00Z"},
-  {"repository":"example/missing","workflow":"ci.yml","total_count":1,"conclusion":"success","updated_at":"2026-09-24T00:00:00Z"}
+  {"repository":"example/healthy","workflow":"ci.yml","branch":"feature/stale","total_count":1,"conclusion":"failure","updated_at":"2026-09-25T00:00:00Z"},
+  {"repository":"example/healthy","workflow":"ci.yml","branch":"main","total_count":1,"conclusion":"success","updated_at":"2026-09-24T00:00:00Z"},
+  {"repository":"example/missing","workflow":"ci.yml","branch":"main","total_count":1,"conclusion":"success","updated_at":"2026-09-24T00:00:00Z"}
 ]
 JSON
 
@@ -27,7 +28,7 @@ fi
 
 cat > "$tmp/missing.json" <<'JSON'
 [
-  {"repository":"example/healthy","workflow":"ci.yml","total_count":1,"conclusion":"success","updated_at":"2026-09-24T00:00:00Z"}
+  {"repository":"example/healthy","workflow":"ci.yml","branch":"main","total_count":1,"conclusion":"success","updated_at":"2026-09-24T00:00:00Z"}
 ]
 JSON
 

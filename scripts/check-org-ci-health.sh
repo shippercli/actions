@@ -6,6 +6,8 @@ matrix_file=${1:-.github/org-ci-matrix.json}
 fixture_file=${ORG_CI_HEALTH_FIXTURE:-}
 api_url=${GITHUB_API_URL:-https://api.github.com}
 summary_file=${GITHUB_STEP_SUMMARY:-}
+branch=${ORG_CI_HEALTH_BRANCH:-main}
+branch_param=$(jq -nr --arg value "$branch" '$value | @uri')
 
 failures=0
 checked=0
@@ -24,8 +26,8 @@ while IFS=$'\t' read -r repository workflow; do
   checked=$((checked + 1))
 
   if [[ -n "$fixture_file" ]]; then
-    response=$(jq -c --arg repository "$repository" --arg workflow "$workflow" \
-      '[.[] | select(.repository == $repository and .workflow == $workflow)] | first // {total_count: 0}' \
+    response=$(jq -c --arg repository "$repository" --arg workflow "$workflow" --arg branch "$branch" \
+      '[.[] | select(.repository == $repository and .workflow == $workflow and .branch == $branch)] | first // {total_count: 0}' \
       "$fixture_file")
   else
     response=$(curl --fail-with-body --silent --show-error \
@@ -34,7 +36,7 @@ while IFS=$'\t' read -r repository workflow; do
       -H 'User-Agent: shippercli-org-ci-health' \
       -H 'X-GitHub-Api-Version: 2022-11-28' \
       -H "Authorization: Bearer ${GITHUB_TOKEN:?GITHUB_TOKEN is required}" \
-      "${api_url}/repos/${repository}/actions/workflows/${workflow}/runs?per_page=1&status=completed") || {
+      "${api_url}/repos/${repository}/actions/workflows/${workflow}/runs?per_page=1&status=completed&branch=${branch_param}") || {
         write_line "| \`$repository\` | \`$workflow\` | API error | unavailable |"
         failures=$((failures + 1))
         continue
