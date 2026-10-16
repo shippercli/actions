@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+      - uses: shippercli/actions/.github/actions/shipper@b380b0c81d414cc52d47615c05a09b57345f0873
         with:
           command: validate
           working-directory: ${{ inputs.working_directory }}
@@ -58,7 +58,7 @@ jobs:
     needs: validate
     steps:
       - uses: actions/checkout@v4
-      - uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+      - uses: shippercli/actions/.github/actions/shipper@b380b0c81d414cc52d47615c05a09b57345f0873
         with:
           command: plan
           project: ${{ inputs.project }}
@@ -79,7 +79,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
-      - uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+      - uses: shippercli/actions/.github/actions/shipper@b380b0c81d414cc52d47615c05a09b57345f0873
         with:
           command: apply
           project: ${{ inputs.project }}

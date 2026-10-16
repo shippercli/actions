@@ -7,7 +7,7 @@ Reusable GitHub Actions for Shipper deployments.
 Use the composite action when a workflow should run the Shipper CLI with an isolated Composer installation:
 
 ```yaml
-- uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+- uses: shippercli/actions/.github/actions/shipper@b380b0c81d414cc52d47615c05a09b57345f0873
   with:
     command: apply
     project: myapp
@@ -33,7 +33,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+    uses: shippercli/actions/.github/workflows/shipper.yml@b380b0c81d414cc52d47615c05a09b57345f0873
     with:
       providers: |
         shippercli/provider-cpanel:^1.0
@@ -51,7 +51,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+    uses: shippercli/actions/.github/workflows/shipper.yml@b380b0c81d414cc52d47615c05a09b57345f0873
     with:
       project: myapp
       profile: production
@@ -96,7 +96,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+    uses: shippercli/actions/.github/workflows/shipper.yml@b380b0c81d414cc52d47615c05a09b57345f0873
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
