@@ -175,10 +175,6 @@ runs:
         SHIPPER_BIN="$SHIPPER_HOME/vendor/bin/shipper"
         ARGS=("$COMMAND")
 
-        if [ -n "${PROJECT:-}" ]; then
-          ARGS+=("$PROJECT")
-        fi
-
         if [ -n "${PROFILE:-}" ]; then
           ARGS+=("--profile=$PROFILE")
         fi
@@ -195,8 +191,13 @@ runs:
           ARGS+=("--lines=$LINES")
         fi
 
+        # Project names are data, including names that begin with a dash.
+        if [ -n "${PROJECT:-}" ]; then
+          ARGS+=("--" "$PROJECT")
+        fi
+
         # Execute command with proper argument passing
-        echo "Running: $SHIPPER_BIN ${ARGS[*]}"
+        echo "Running Shipper command: $COMMAND"
         set +e
         "$SHIPPER_BIN" "${ARGS[@]}"
         exit_code=$?

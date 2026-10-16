@@ -19,6 +19,10 @@ Use the composite action when a workflow should run the Shipper CLI with an isol
 
 The action installs the requested `shippercli/cli` version and provider packages together in an isolated Composer tool directory. The reusable workflow below is a separate job-level integration.
 
+Command inputs are passed as individual arguments. Project names are placed
+after `--`, so a name beginning with a dash cannot enable a CLI option. The
+action logs the command name without echoing project/profile/release values.
+
 ## Quick Start
 
 ```yaml
