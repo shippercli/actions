@@ -37,6 +37,7 @@ jobs:
     with:
       providers: |
         shippercli/provider-cpanel:^1.0
+      project: myapp
     secrets:
       CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
@@ -75,7 +76,7 @@ Reusable-workflow callers need to forward only the secret for each selected prov
 
 ## Workflow Steps
 
-1. **Validate** - Validates `shipper.yml` configuration
+1. **Validate** - Validates `shipper.yml` configuration (the reusable workflow requires a project because it also plans and deploys)
 2. **Plan** - Shows what will be created/deployed
 3. **Deploy** - Runs the actual deployment (only on `main` branch)
 

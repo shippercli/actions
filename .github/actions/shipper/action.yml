@@ -11,7 +11,7 @@ inputs:
     description: 'The Shipper command (validate, plan, apply, status, logs, rollback, or destroy)'
     required: true
   project:
-    description: 'The project name from shipper.yml'
+    description: 'The project name from shipper.yml (required except for validate)'
     required: false
   profile:
     description: 'The deployment profile (e.g., production, staging, preview)'
@@ -171,6 +171,11 @@ runs:
           validate|plan|apply|status|logs|rollback|destroy) ;;
           *) echo "Unsupported Shipper command: $COMMAND" >&2; exit 2 ;;
         esac
+
+        if [ "$COMMAND" != "validate" ] && [ -z "${PROJECT:-}" ]; then
+          echo "Project is required for Shipper command: $COMMAND" >&2
+          exit 2
+        fi
 
         SHIPPER_BIN="$SHIPPER_HOME/vendor/bin/shipper"
         ARGS=("$COMMAND")

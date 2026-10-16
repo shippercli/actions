@@ -6,7 +6,7 @@ on:
       project:
         description: "Project to deploy"
         type: string
-        required: false
+        required: true
       profile:
         description: "Profile to use"
         type: string

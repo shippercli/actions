@@ -69,10 +69,17 @@ class CommandArgumentsTest < Minitest::Test
     assert_equal "exit-code=23\n", File.read(@output)
   end
 
-  def test_command_without_project
-    args, status = run_action('COMMAND' => 'logs', 'LINES' => '25')
+  def test_validate_without_project
+    args, status = run_action('COMMAND' => 'validate')
     assert_equal 0, status
-    assert_equal ['logs', '--lines=25'], args
+    assert_equal ['validate'], args
+  end
+
+  def test_operational_command_requires_project
+    args, status, _stdout, stderr = run_action('COMMAND' => 'logs', 'LINES' => '25')
+    assert_equal 2, status
+    assert_nil args
+    assert_includes stderr, 'Project is required for Shipper command: logs'
   end
 
   def test_unsupported_command_never_executes

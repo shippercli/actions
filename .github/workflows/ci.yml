@@ -22,6 +22,7 @@ jobs:
       - name: Validate reusable workflow contract
         run: |
           ruby - <<'RUBY'
+          require 'yaml'
           workflow = File.read('.github/workflows/shipper.yml')
           provider_secrets = %w[CPANEL_API_TOKEN FORGE_API_TOKEN PLOI_API_KEY]
 
@@ -35,6 +36,10 @@ jobs:
           pins = workflow.scan(%r{uses: shippercli/actions/\.github/actions/shipper@([^\s]+)}).flatten
           raise 'expected validate, plan, and deploy action invocations' unless pins.length == 3
           raise 'action references must use immutable 40-character SHAs' unless pins.all? { |pin| pin.match?(/\A[0-9a-f]{40}\z/) }
+          workflow_data = YAML.load_file('.github/workflows/shipper.yml')
+          callable = workflow_data.fetch(true).fetch('workflow_call')
+          project = callable.fetch('inputs').fetch('project')
+          raise 'reusable deployment workflow must require a project' unless project['required'] == true
           RUBY
       - name: Install and validate with cPanel provider
         uses: ./.github/actions/shipper

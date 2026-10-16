@@ -46,7 +46,7 @@ The `providers` value contains one Composer package per line. Each package may i
 | Input | Required | Default | Description |
 | --- | --- | --- | --- |
 | `command` | Yes | - | `validate`, `plan`, `apply`, `status`, `logs`, `rollback`, or `destroy` |
-| `project` | No | - | Project name from `shipper.yml` |
+| `project` | No | - | Project name from `shipper.yml`; required for every command except `validate` |
 | `profile` | No | - | Deployment profile |
 | `force` | No | `false` | Skip confirmation prompts |
 | `release` | No | - | Provider release identifier for rollback |
