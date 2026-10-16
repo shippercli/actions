@@ -42,6 +42,9 @@ jobs:
           raise 'reusable deployment workflow must require a project' unless project['required'] == true
           deploy = workflow_data.fetch('jobs').fetch('deploy')
           raise 'deployment must be restricted to the main branch' unless deploy['if'] == "github.ref == 'refs/heads/main'"
+          health_workflow = YAML.safe_load(File.read('.github/workflows/org-ci-health.yml'), permitted_classes: [], aliases: false)
+          health_job = health_workflow.fetch('jobs').fetch('health')
+          raise 'secret-bearing organization health workflow must be restricted to the main branch' unless health_job['if'] == "github.ref == 'refs/heads/main'"
           RUBY
       - name: Install and validate with cPanel provider
         uses: ./.github/actions/shipper
