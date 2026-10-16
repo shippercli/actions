@@ -40,7 +40,7 @@ jobs:
     name: Validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: shippercli/actions/.github/actions/shipper@b380b0c81d414cc52d47615c05a09b57345f0873
         with:
           command: validate
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: shippercli/actions/.github/actions/shipper@b380b0c81d414cc52d47615c05a09b57345f0873
         with:
           command: plan
@@ -78,7 +78,7 @@ jobs:
     needs: plan
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: shippercli/actions/.github/actions/shipper@b380b0c81d414cc52d47615c05a09b57345f0873
         with:
           command: apply

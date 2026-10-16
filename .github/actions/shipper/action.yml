@@ -98,7 +98,7 @@ runs:
         printf 'providers-hash=%s\n' "$providers_hash" >> "$GITHUB_OUTPUT"
 
     - name: Cache Shipper tool installation
-      uses: actions/cache@v4
+      uses: actions/cache@v6.1.0
       with:
         path: ${{ steps.resolve-tool.outputs.shipper-home }}
         key: shipper-${{ runner.os }}-${{ inputs.php-version }}-${{ steps.resolve-tool.outputs.cli-hash }}-${{ steps.resolve-tool.outputs.providers-hash }}
