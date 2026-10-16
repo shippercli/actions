@@ -14,12 +14,15 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
+      - name: Test command argument boundaries
+        run: ruby scripts/test-command-arguments.rb
       - name: Test organization CI health fixtures
         run: ./scripts/test-org-ci-health.sh
       - name: Validate reusable workflow contract
         run: |
           ruby - <<'RUBY'
+          require 'yaml'
           workflow = File.read('.github/workflows/shipper.yml')
           provider_secrets = %w[CPANEL_API_TOKEN FORGE_API_TOKEN PLOI_API_KEY]
 
@@ -33,6 +36,15 @@ jobs:
           pins = workflow.scan(%r{uses: shippercli/actions/\.github/actions/shipper@([^\s]+)}).flatten
           raise 'expected validate, plan, and deploy action invocations' unless pins.length == 3
           raise 'action references must use immutable 40-character SHAs' unless pins.all? { |pin| pin.match?(/\A[0-9a-f]{40}\z/) }
+          workflow_data = YAML.load_file('.github/workflows/shipper.yml')
+          callable = workflow_data.fetch(true).fetch('workflow_call')
+          project = callable.fetch('inputs').fetch('project')
+          raise 'reusable deployment workflow must require a project' unless project['required'] == true
+          deploy = workflow_data.fetch('jobs').fetch('deploy')
+          raise 'deployment must be restricted to the main branch' unless deploy['if'] == "github.ref == 'refs/heads/main'"
+          health_workflow = YAML.safe_load(File.read('.github/workflows/org-ci-health.yml'), permitted_classes: [], aliases: false)
+          health_job = health_workflow.fetch('jobs').fetch('health')
+          raise 'secret-bearing organization health workflow must be restricted to the main branch' unless health_job['if'] == "github.ref == 'refs/heads/main'"
           RUBY
       - name: Install and validate with cPanel provider
         uses: ./.github/actions/shipper
