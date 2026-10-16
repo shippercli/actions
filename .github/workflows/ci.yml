@@ -40,6 +40,8 @@ jobs:
           callable = workflow_data.fetch(true).fetch('workflow_call')
           project = callable.fetch('inputs').fetch('project')
           raise 'reusable deployment workflow must require a project' unless project['required'] == true
+          deploy = workflow_data.fetch('jobs').fetch('deploy')
+          raise 'deployment must be restricted to the main branch' unless deploy['if'] == "github.ref == 'refs/heads/main'"
           RUBY
       - name: Install and validate with cPanel provider
         uses: ./.github/actions/shipper
