@@ -16,7 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test organization CI health fixtures
-        run: ./scripts/test-org-ci-health.sh
+        run: |
+          ./scripts/test-org-ci-health.sh
+          python3 scripts/test-org-ci-auth.py
       - name: Validate reusable workflow contract
         run: |
           ruby - <<'RUBY'

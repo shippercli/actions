@@ -30,17 +30,25 @@ while IFS=$'\t' read -r repository workflow; do
       '[.[] | select(.repository == $repository and .workflow == $workflow and .branch == $branch)] | first // {total_count: 0}' \
       "$fixture_file")
   else
-    response=$(curl --fail-with-body --silent --show-error \
+    request_failed=0
+    response=$(curl --fail-with-body --silent --show-error --write-out '\n%{http_code}' \
       --retry 3 --retry-delay 2 \
       -H 'Accept: application/vnd.github+json' \
       -H 'User-Agent: shippercli-org-ci-health' \
       -H 'X-GitHub-Api-Version: 2022-11-28' \
       -H "Authorization: Bearer ${GITHUB_TOKEN:?GITHUB_TOKEN is required}" \
-      "${api_url}/repos/${repository}/actions/workflows/${workflow}/runs?per_page=1&status=completed&branch=${branch_param}") || {
-        write_line "| \`$repository\` | \`$workflow\` | API error | unavailable |"
-        failures=$((failures + 1))
-        continue
-      }
+      "${api_url}/repos/${repository}/actions/workflows/${workflow}/runs?per_page=1&status=completed&branch=${branch_param}") || request_failed=1
+    http_status=${response##*$'\n'}
+    response=${response%$'\n'*}
+    if [[ "$http_status" == 401 ]]; then
+      write_line '::error::GitHub authentication failed (HTTP 401). Replace ORG_CI_HEALTH_TOKEN with a valid token granting Actions read access to the monitored repositories.'
+      exit 1
+    fi
+    if [[ "$request_failed" == 1 ]]; then
+      write_line "| \`$repository\` | \`$workflow\` | API error (HTTP $http_status) | unavailable |"
+      failures=$((failures + 1))
+      continue
+    fi
   fi
 
   total=$(jq -r '.total_count // 0' <<< "$response")
