@@ -19,6 +19,30 @@ Use the composite action when a workflow should run the Shipper CLI with an isol
 
 The action installs the requested `shippercli/cli` version and provider packages together in an isolated Composer tool directory. The reusable workflow below is a separate job-level integration.
 
+### Install providers from GitHub releases
+
+For Forge, Ploi, and Coolify, register the corresponding Git repositories in Composer before invoking the composite action. Keep both steps in the same job so they share `COMPOSER_HOME`. This example assumes the job has checked out a project with a valid `shipper.yml` and set the environment variables that file references. Keep only the repositories and packages your configuration uses.
+
+```yaml
+- name: Register Shipper provider repositories
+  shell: bash
+  run: |
+    set -euo pipefail
+    export COMPOSER_HOME="$(mktemp -d "${RUNNER_TEMP}/shipper-composer.XXXXXXXX")"
+    composer config --global repositories.shipper-forge git https://github.com/shippercli/provider-forge.git
+    composer config --global repositories.shipper-ploi git https://github.com/shippercli/provider-ploi.git
+    composer config --global repositories.shipper-coolify git https://github.com/shippercli/provider-coolify.git
+    printf 'COMPOSER_HOME=%s\n' "$COMPOSER_HOME" >> "$GITHUB_ENV"
+- uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
+  with:
+    command: validate
+    cli-version: '1.0.5'
+    providers: |
+      shippercli/provider-forge:1.0.0
+      shippercli/provider-ploi:2.0.0
+      shippercli/provider-coolify:1.0.0
+```
+
 ## Quick Start
 
 ```yaml
