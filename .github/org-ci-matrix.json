@@ -1,7 +1,9 @@
 [
   {"repository":"shippercli/cli","workflow":"ci.yml"},
   {"repository":"shippercli/actions","workflow":"ci.yml"},
+  {"repository":"shippercli/assets","workflow":"ci.yml"},
   {"repository":"shippercli/contracts","workflow":"ci.yml"},
+  {"repository":"shippercli/provider-coolify","workflow":"ci.yml"},
   {"repository":"shippercli/provider-cpanel","workflow":"ci.yml"},
   {"repository":"shippercli/provider-easypanel","workflow":"ci.yml"},
   {"repository":"shippercli/provider-forge","workflow":"ci.yml"},
