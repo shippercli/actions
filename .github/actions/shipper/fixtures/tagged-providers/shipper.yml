@@ -1,0 +1,36 @@
+providers:
+  forge:
+    api_token: placeholder
+    organization_slug: example
+    server_id: 123456
+  ploi:
+    api_key: placeholder
+    server_id: 123456
+  coolify:
+    url: https://coolify.example.com
+    api_token: placeholder
+    server_uuid: placeholder
+    project_uuid: placeholder
+
+projects:
+  forge-example:
+    provider: forge
+    profiles:
+      production:
+        domain: forge.example.com
+  ploi-example:
+    provider: ploi
+    repository:
+      provider: github
+      name: acme/example
+    profiles:
+      production:
+        domain: ploi.example.com
+  coolify-example:
+    provider: coolify
+    repository:
+      provider: github
+      url: https://github.com/acme/example
+    profiles:
+      production:
+        domain: coolify.example.com
