@@ -11,7 +11,7 @@ inputs:
     description: 'The Shipper command (validate, plan, apply, status, logs, rollback, or destroy)'
     required: true
   project:
-    description: 'The project name from shipper.yml'
+    description: 'The project name from shipper.yml (required except for validate)'
     required: false
   profile:
     description: 'The deployment profile (e.g., production, staging, preview)'
@@ -98,7 +98,7 @@ runs:
         printf 'providers-hash=%s\n' "$providers_hash" >> "$GITHUB_OUTPUT"
 
     - name: Cache Shipper tool installation
-      uses: actions/cache@v4
+      uses: actions/cache@v6.1.0
       with:
         path: ${{ steps.resolve-tool.outputs.shipper-home }}
         key: shipper-${{ runner.os }}-${{ inputs.php-version }}-${{ steps.resolve-tool.outputs.cli-hash }}-${{ steps.resolve-tool.outputs.providers-hash }}
@@ -172,12 +172,13 @@ runs:
           *) echo "Unsupported Shipper command: $COMMAND" >&2; exit 2 ;;
         esac
 
+        if [ "$COMMAND" != "validate" ] && [ -z "${PROJECT:-}" ]; then
+          echo "Project is required for Shipper command: $COMMAND" >&2
+          exit 2
+        fi
+
         SHIPPER_BIN="$SHIPPER_HOME/vendor/bin/shipper"
         ARGS=("$COMMAND")
-
-        if [ -n "${PROJECT:-}" ]; then
-          ARGS+=("$PROJECT")
-        fi
 
         if [ -n "${PROFILE:-}" ]; then
           ARGS+=("--profile=$PROFILE")
@@ -195,8 +196,13 @@ runs:
           ARGS+=("--lines=$LINES")
         fi
 
+        # Project names are data, including names that begin with a dash.
+        if [ -n "${PROJECT:-}" ]; then
+          ARGS+=("--" "$PROJECT")
+        fi
+
         # Execute command with proper argument passing
-        echo "Running: $SHIPPER_BIN ${ARGS[*]}"
+        echo "Running Shipper command: $COMMAND"
         set +e
         "$SHIPPER_BIN" "${ARGS[@]}"
         exit_code=$?

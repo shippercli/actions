@@ -7,7 +7,7 @@ Reusable GitHub Actions for Shipper deployments.
 Use the composite action when a workflow should run the Shipper CLI with an isolated Composer installation:
 
 ```yaml
-- uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+- uses: shippercli/actions/.github/actions/shipper@e23d052049903ac0cbaaffffd5956a050a172584
   with:
     command: apply
     project: myapp
@@ -19,6 +19,10 @@ Use the composite action when a workflow should run the Shipper CLI with an isol
 
 The action installs the requested `shippercli/cli` version and provider packages together in an isolated Composer tool directory. The reusable workflow below is a separate job-level integration.
 
+Command inputs are passed as individual arguments. Project names are placed
+after `--`, so a name beginning with a dash cannot enable a CLI option. The
+action logs the command name without echoing project/profile/release values.
+
 ## Quick Start
 
 ```yaml
@@ -29,10 +33,11 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+    uses: shippercli/actions/.github/workflows/shipper.yml@e23d052049903ac0cbaaffffd5956a050a172584
     with:
       providers: |
         shippercli/provider-cpanel:^1.0
+      project: myapp
     secrets:
       CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
@@ -47,7 +52,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+    uses: shippercli/actions/.github/workflows/shipper.yml@e23d052049903ac0cbaaffffd5956a050a172584
     with:
       project: myapp
       profile: production
@@ -71,7 +76,7 @@ Reusable-workflow callers need to forward only the secret for each selected prov
 
 ## Workflow Steps
 
-1. **Validate** - Validates `shipper.yml` configuration
+1. **Validate** - Validates `shipper.yml` configuration (the reusable workflow requires a project because it also plans and deploys)
 2. **Plan** - Shows what will be created/deployed
 3. **Deploy** - Runs the actual deployment (only on `main` branch)
 
@@ -92,7 +97,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+    uses: shippercli/actions/.github/workflows/shipper.yml@e23d052049903ac0cbaaffffd5956a050a172584
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
