@@ -48,4 +48,21 @@ jobs:
           CPANEL_USERNAME: action-test
           CPANEL_API_TOKEN: action-test-token
       - name: Verify CLI is available to subsequent steps
-        run: shipper --version
+        run: |
+          shipper --version
+          command -v shipper > "$RUNNER_TEMP/first-shipper-bin"
+      - name: Reinstall with the same Composer constraints
+        uses: ./.github/actions/shipper
+        with:
+          command: validate
+          working-directory: .github/actions/shipper/fixtures
+          cli-version: "^1.0"
+          providers: |
+            shippercli/provider-cpanel:^1.0
+        env:
+          CPANEL_USERNAME: action-test
+          CPANEL_API_TOKEN: action-test-token
+      - name: Verify identical constraints did not reuse the installed CLI
+        run: |
+          test "$(command -v shipper)" != "$(cat "$RUNNER_TEMP/first-shipper-bin")"
+          shipper --version
