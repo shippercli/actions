@@ -53,12 +53,13 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@f944842cb6de035094caf9d520ae6968acf90442
+    uses: shippercli/actions/.github/workflows/shipper.yml@2e8e23fda4ba09fd4f91a292308c9164280259db
     with:
-      cpanel_username: ${{ vars.CPANEL_USERNAME }}
+      cpanel_hostname: ${{ vars.CPANEL_HOSTNAME }}
       providers: |
         shippercli/provider-cpanel:^1.0
     secrets:
+      CPANEL_ACCOUNT_USERNAME: ${{ secrets.CPANEL_USERNAME }}
       CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
 
@@ -72,14 +73,15 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@f944842cb6de035094caf9d520ae6968acf90442
+    uses: shippercli/actions/.github/workflows/shipper.yml@2e8e23fda4ba09fd4f91a292308c9164280259db
     with:
       project: myapp
       profile: production
-      cpanel_username: ${{ vars.CPANEL_USERNAME }}
+      cpanel_hostname: ${{ vars.CPANEL_HOSTNAME }}
       providers: |
         shippercli/provider-cpanel:^1.0
     secrets:
+      CPANEL_ACCOUNT_USERNAME: ${{ secrets.CPANEL_USERNAME }}
       CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
 
@@ -94,7 +96,9 @@ Configure these in your repository settings under `Settings > Secrets`:
 | `CPANEL_API_TOKEN` | cPanel | Your cPanel API token |
 | `COOLIFY_API_TOKEN` | Coolify | Your Coolify API token |
 
-Reusable-workflow callers forward the secret for each selected provider. Set the repository variable `CPANEL_USERNAME` for the cPanel examples above. For Coolify, set the `coolify_url`, `coolify_server_uuid`, and `coolify_project_uuid` inputs to populate `COOLIFY_URL`, `COOLIFY_SERVER_UUID`, and `COOLIFY_PROJECT_UUID` in the workflow.
+Reusable-workflow callers forward the secret for each selected provider. For the cPanel examples, set the repository variable `CPANEL_HOSTNAME` to the bare hostname and store `CPANEL_USERNAME` and `CPANEL_API_TOKEN` as repository secrets. The explicit `CPANEL_ACCOUNT_USERNAME` mapping forwards the username as `CPANEL_USERNAME` to `shipper.yml`. You can also pass a non-secret username through `cpanel_username`. The `cpanel_port` input defaults to `2083`. The workflow supplies `CPANEL_HOSTNAME` and `CPANEL_PORT` for interpolation.
+
+For Coolify, set the `coolify_url`, `coolify_server_uuid`, and `coolify_project_uuid` inputs to populate `COOLIFY_URL`, `COOLIFY_SERVER_UUID`, and `COOLIFY_PROJECT_UUID` in the workflow.
 
 The reusable workflow automatically registers the Forge, Ploi, and Coolify Composer repositories when their packages are selected.
 
@@ -121,14 +125,15 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@f944842cb6de035094caf9d520ae6968acf90442
+    uses: shippercli/actions/.github/workflows/shipper.yml@2e8e23fda4ba09fd4f91a292308c9164280259db
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
-      cpanel_username: ${{ vars.CPANEL_USERNAME }}
+      cpanel_hostname: ${{ vars.CPANEL_HOSTNAME }}
       providers: |
         shippercli/provider-cpanel:^1.0
     secrets:
+      CPANEL_ACCOUNT_USERNAME: ${{ secrets.CPANEL_USERNAME }}
       CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
 
