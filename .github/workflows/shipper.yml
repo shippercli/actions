@@ -27,7 +27,25 @@ on:
         description: "Directory containing shipper.yml"
         type: string
         default: "."
+      deploy:
+        description: "Apply the plan on main or manual dispatch"
+        type: boolean
+        default: true
+      cpanel_username:
+        description: "cPanel account username for shipper.yml"
+        type: string
+      coolify_url:
+        description: "Coolify API base URL for shipper.yml"
+        type: string
+      coolify_server_uuid:
+        description: "Coolify server UUID for shipper.yml"
+        type: string
+      coolify_project_uuid:
+        description: "Coolify project UUID for shipper.yml"
+        type: string
     secrets:
+      COOLIFY_API_TOKEN:
+        required: false
       PLOI_API_KEY:
         required: false
       FORGE_API_TOKEN:
@@ -41,6 +59,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Register requested Git-hosted providers
+        shell: bash
+        env:
+          SHIPPER_PROVIDERS: ${{ inputs.providers }}
+        run: |
+          set -euo pipefail
+          export COMPOSER_HOME="$(mktemp -d "$RUNNER_TEMP/shipper-composer.XXXXXXXX")"
+          while IFS= read -r package; do
+            package="${package%"${package##*[![:space:]]}"}"
+            case "${package%%:*}" in
+              shippercli/provider-forge|shippercli/provider-ploi|shippercli/provider-coolify)
+                provider="${package%%:*}"
+                composer config --global "repositories.${provider##*/}" git "https://github.com/${provider}.git"
+                ;;
+            esac
+          done <<< "$SHIPPER_PROVIDERS"
+          printf 'COMPOSER_HOME=%s\n' "$COMPOSER_HOME" >> "$GITHUB_ENV"
       - uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
         with:
           command: validate
@@ -52,12 +87,34 @@ jobs:
           PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
           CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+          CPANEL_USERNAME: ${{ inputs.cpanel_username }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          COOLIFY_URL: ${{ inputs.coolify_url }}
+          COOLIFY_SERVER_UUID: ${{ inputs.coolify_server_uuid }}
+          COOLIFY_PROJECT_UUID: ${{ inputs.coolify_project_uuid }}
   plan:
     name: Plan
     runs-on: ubuntu-latest
     needs: validate
     steps:
       - uses: actions/checkout@v4
+      - name: Register requested Git-hosted providers
+        shell: bash
+        env:
+          SHIPPER_PROVIDERS: ${{ inputs.providers }}
+        run: |
+          set -euo pipefail
+          export COMPOSER_HOME="$(mktemp -d "$RUNNER_TEMP/shipper-composer.XXXXXXXX")"
+          while IFS= read -r package; do
+            package="${package%"${package##*[![:space:]]}"}"
+            case "${package%%:*}" in
+              shippercli/provider-forge|shippercli/provider-ploi|shippercli/provider-coolify)
+                provider="${package%%:*}"
+                composer config --global "repositories.${provider##*/}" git "https://github.com/${provider}.git"
+                ;;
+            esac
+          done <<< "$SHIPPER_PROVIDERS"
+          printf 'COMPOSER_HOME=%s\n' "$COMPOSER_HOME" >> "$GITHUB_ENV"
       - uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
         with:
           command: plan
@@ -71,14 +128,36 @@ jobs:
           PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
           CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+          CPANEL_USERNAME: ${{ inputs.cpanel_username }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          COOLIFY_URL: ${{ inputs.coolify_url }}
+          COOLIFY_SERVER_UUID: ${{ inputs.coolify_server_uuid }}
+          COOLIFY_PROJECT_UUID: ${{ inputs.coolify_project_uuid }}
 
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
     needs: plan
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: inputs.deploy && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
     steps:
       - uses: actions/checkout@v4
+      - name: Register requested Git-hosted providers
+        shell: bash
+        env:
+          SHIPPER_PROVIDERS: ${{ inputs.providers }}
+        run: |
+          set -euo pipefail
+          export COMPOSER_HOME="$(mktemp -d "$RUNNER_TEMP/shipper-composer.XXXXXXXX")"
+          while IFS= read -r package; do
+            package="${package%"${package##*[![:space:]]}"}"
+            case "${package%%:*}" in
+              shippercli/provider-forge|shippercli/provider-ploi|shippercli/provider-coolify)
+                provider="${package%%:*}"
+                composer config --global "repositories.${provider##*/}" git "https://github.com/${provider}.git"
+                ;;
+            esac
+          done <<< "$SHIPPER_PROVIDERS"
+          printf 'COMPOSER_HOME=%s\n' "$COMPOSER_HOME" >> "$GITHUB_ENV"
       - uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
         with:
           command: apply
@@ -93,3 +172,8 @@ jobs:
           PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
           CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+          CPANEL_USERNAME: ${{ inputs.cpanel_username }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          COOLIFY_URL: ${{ inputs.coolify_url }}
+          COOLIFY_SERVER_UUID: ${{ inputs.coolify_server_uuid }}
+          COOLIFY_PROJECT_UUID: ${{ inputs.coolify_project_uuid }}

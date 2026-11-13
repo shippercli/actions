@@ -23,7 +23,7 @@ jobs:
         run: |
           ruby - <<'RUBY'
           workflow = File.read('.github/workflows/shipper.yml')
-          provider_secrets = %w[CPANEL_API_TOKEN FORGE_API_TOKEN PLOI_API_KEY]
+          provider_secrets = %w[CPANEL_API_TOKEN FORGE_API_TOKEN PLOI_API_KEY COOLIFY_API_TOKEN]
 
           provider_secrets.each do |secret|
             declarations = workflow.scan(/^      #{secret}:$/).length
@@ -97,3 +97,20 @@ jobs:
         run: |
           test "$VALIDATE_EXIT_CODE" = 0
           test "$(shipper --version)" = "Shipper 1.0.6"
+
+  reusable-workflow:
+    uses: ./.github/workflows/shipper.yml
+    with:
+      deploy: false
+      project: app
+      profile: production
+      cpanel_username: action-test
+      working_directory: .github/actions/shipper/fixtures
+      cli_version: '1.0.7'
+      providers: |
+        shippercli/provider-cpanel:1.2.3
+        shippercli/provider-forge:1.0.0
+        shippercli/provider-ploi:2.0.0
+        shippercli/provider-coolify:1.0.9
+    secrets:
+      CPANEL_API_TOKEN: action-test-token
