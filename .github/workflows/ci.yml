@@ -53,10 +53,12 @@ jobs:
         run: |
           shipper --version
           command -v shipper > "$RUNNER_TEMP/first-shipper-bin"
-      - name: Reinstall with the same Composer constraints
+      - name: Reinstall with the same Composer constraints and plan a project
         uses: ./.github/actions/shipper
         with:
-          command: validate
+          command: plan
+          project: app
+          profile: production
           working-directory: .github/actions/shipper/fixtures
           cli-version: "^1.0"
           providers: |

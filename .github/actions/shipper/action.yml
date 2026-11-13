@@ -152,10 +152,6 @@ runs:
         SHIPPER_BIN="$SHIPPER_HOME/vendor/bin/shipper"
         ARGS=("$COMMAND")
 
-        if [ -n "${PROJECT:-}" ]; then
-          ARGS+=("$PROJECT")
-        fi
-
         if [ -n "${PROFILE:-}" ]; then
           ARGS+=("--profile=$PROFILE")
         fi
@@ -170,6 +166,10 @@ runs:
 
         if [ -n "${LINES:-}" ]; then
           ARGS+=("--lines=$LINES")
+        fi
+
+        if [ -n "${PROJECT:-}" ]; then
+          ARGS+=(-- "$PROJECT")
         fi
 
         # Execute command with proper argument passing
