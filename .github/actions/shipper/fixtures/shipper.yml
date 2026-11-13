@@ -1,7 +1,7 @@
 providers:
   cpanel:
-    host: "cpanel.example.com"
-    port: 2083
+    host: "${CPANEL_HOSTNAME}"
+    port: ${CPANEL_PORT}
     username: "${CPANEL_USERNAME}"
     api_token: "${CPANEL_API_TOKEN}"
 
