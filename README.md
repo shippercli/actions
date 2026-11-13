@@ -7,7 +7,7 @@ Reusable GitHub Actions for Shipper deployments.
 Use the composite action when a workflow should run the Shipper CLI with an isolated Composer installation:
 
 ```yaml
-- uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
+- uses: shippercli/actions/.github/actions/shipper@92aa9fcfd445ca39548b99f07d4f096f6b07074f
   with:
     command: apply
     project: myapp
@@ -33,7 +33,7 @@ For Forge, Ploi, and Coolify, register the corresponding Git repositories in Com
     composer config --global repositories.shipper-ploi git https://github.com/shippercli/provider-ploi.git
     composer config --global repositories.shipper-coolify git https://github.com/shippercli/provider-coolify.git
     printf 'COMPOSER_HOME=%s\n' "$COMPOSER_HOME" >> "$GITHUB_ENV"
-- uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
+- uses: shippercli/actions/.github/actions/shipper@92aa9fcfd445ca39548b99f07d4f096f6b07074f
   with:
     command: validate
     cli-version: '1.0.5'

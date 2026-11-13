@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
+      - uses: shippercli/actions/.github/actions/shipper@92aa9fcfd445ca39548b99f07d4f096f6b07074f
         with:
           command: apply
           project: api
