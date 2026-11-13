@@ -119,3 +119,23 @@ jobs:
     secrets:
       CPANEL_ACCOUNT_USERNAME: action-test
       CPANEL_API_TOKEN: action-test-token
+
+  reusable-coolify:
+    uses: ./.github/workflows/shipper.yml
+    with:
+      deploy: false
+      project: app
+      profile: production
+      working_directory: .github/actions/shipper/fixtures/coolify
+      cli_version: '1.0.7'
+      providers: |
+        shippercli/provider-coolify:1.0.9
+        shippercli/provider-cpanel:1.2.3
+      cpanel_hostname: cpanel.example.com
+      coolify_url: http://127.0.0.1:1
+      coolify_server_uuid: action-test-server
+      coolify_project_uuid: action-test-project
+    secrets:
+      CPANEL_ACCOUNT_USERNAME: action-test
+      CPANEL_API_TOKEN: action-test-token
+      COOLIFY_API_TOKEN: action-test-token
