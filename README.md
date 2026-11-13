@@ -53,8 +53,9 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@52173d31e1c11e78b999a8fe6ef3942032b52bd6
+    uses: shippercli/actions/.github/workflows/shipper.yml@f944842cb6de035094caf9d520ae6968acf90442
     with:
+      cpanel_username: ${{ vars.CPANEL_USERNAME }}
       providers: |
         shippercli/provider-cpanel:^1.0
     secrets:
@@ -71,10 +72,11 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@52173d31e1c11e78b999a8fe6ef3942032b52bd6
+    uses: shippercli/actions/.github/workflows/shipper.yml@f944842cb6de035094caf9d520ae6968acf90442
     with:
       project: myapp
       profile: production
+      cpanel_username: ${{ vars.CPANEL_USERNAME }}
       providers: |
         shippercli/provider-cpanel:^1.0
     secrets:
@@ -90,14 +92,17 @@ Configure these in your repository settings under `Settings > Secrets`:
 | `PLOI_API_KEY` | Ploi | Your Ploi API key |
 | `FORGE_API_TOKEN` | Forge | Your Forge API token |
 | `CPANEL_API_TOKEN` | cPanel | Your cPanel API token |
+| `COOLIFY_API_TOKEN` | Coolify | Your Coolify API token |
 
-Reusable-workflow callers need to forward only the secret for each selected provider.
+Reusable-workflow callers forward the secret for each selected provider. Set the repository variable `CPANEL_USERNAME` for the cPanel examples above. For Coolify, set the `coolify_url`, `coolify_server_uuid`, and `coolify_project_uuid` inputs to populate `COOLIFY_URL`, `COOLIFY_SERVER_UUID`, and `COOLIFY_PROJECT_UUID` in the workflow.
+
+The reusable workflow automatically registers the Forge, Ploi, and Coolify Composer repositories when their packages are selected.
 
 ## Workflow Steps
 
 1. **Validate** - Validates `shipper.yml` configuration
 2. **Plan** - Shows what will be created/deployed
-3. **Deploy** - Runs the actual deployment (only on `main` branch)
+3. **Deploy** - Applies the plan on `main` or on manual dispatch. Set `deploy: false` to run validation and planning only.
 
 ## Example with Full Configuration
 
@@ -116,10 +121,11 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@52173d31e1c11e78b999a8fe6ef3942032b52bd6
+    uses: shippercli/actions/.github/workflows/shipper.yml@f944842cb6de035094caf9d520ae6968acf90442
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
+      cpanel_username: ${{ vars.CPANEL_USERNAME }}
       providers: |
         shippercli/provider-cpanel:^1.0
     secrets:
