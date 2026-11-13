@@ -53,7 +53,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@2e8e23fda4ba09fd4f91a292308c9164280259db
+    uses: shippercli/actions/.github/workflows/shipper.yml@7ad2891b252cab825bfc16b52aa12015552d5437
     with:
       cpanel_hostname: ${{ vars.CPANEL_HOSTNAME }}
       providers: |
@@ -73,7 +73,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@2e8e23fda4ba09fd4f91a292308c9164280259db
+    uses: shippercli/actions/.github/workflows/shipper.yml@7ad2891b252cab825bfc16b52aa12015552d5437
     with:
       project: myapp
       profile: production
@@ -125,7 +125,7 @@ on:
 
 jobs:
   deploy:
-    uses: shippercli/actions/.github/workflows/shipper.yml@2e8e23fda4ba09fd4f91a292308c9164280259db
+    uses: shippercli/actions/.github/workflows/shipper.yml@7ad2891b252cab825bfc16b52aa12015552d5437
     with:
       project: myapp
       profile: ${{ github.event.inputs.profile || 'production' }}
