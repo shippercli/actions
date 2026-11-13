@@ -34,6 +34,13 @@ on:
       cpanel_username:
         description: "cPanel account username for shipper.yml"
         type: string
+      cpanel_hostname:
+        description: "cPanel hostname for shipper.yml"
+        type: string
+      cpanel_port:
+        description: "cPanel API port for shipper.yml"
+        type: string
+        default: "2083"
       coolify_url:
         description: "Coolify API base URL for shipper.yml"
         type: string
@@ -44,6 +51,8 @@ on:
         description: "Coolify project UUID for shipper.yml"
         type: string
     secrets:
+      CPANEL_ACCOUNT_USERNAME:
+        required: false
       COOLIFY_API_TOKEN:
         required: false
       PLOI_API_KEY:
@@ -87,7 +96,9 @@ jobs:
           PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
           CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
-          CPANEL_USERNAME: ${{ inputs.cpanel_username }}
+          CPANEL_USERNAME: ${{ secrets.CPANEL_ACCOUNT_USERNAME || inputs.cpanel_username }}
+          CPANEL_HOSTNAME: ${{ inputs.cpanel_hostname }}
+          CPANEL_PORT: ${{ inputs.cpanel_port }}
           COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
           COOLIFY_URL: ${{ inputs.coolify_url }}
           COOLIFY_SERVER_UUID: ${{ inputs.coolify_server_uuid }}
@@ -128,7 +139,9 @@ jobs:
           PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
           CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
-          CPANEL_USERNAME: ${{ inputs.cpanel_username }}
+          CPANEL_USERNAME: ${{ secrets.CPANEL_ACCOUNT_USERNAME || inputs.cpanel_username }}
+          CPANEL_HOSTNAME: ${{ inputs.cpanel_hostname }}
+          CPANEL_PORT: ${{ inputs.cpanel_port }}
           COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
           COOLIFY_URL: ${{ inputs.coolify_url }}
           COOLIFY_SERVER_UUID: ${{ inputs.coolify_server_uuid }}
@@ -172,7 +185,9 @@ jobs:
           PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
           CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
-          CPANEL_USERNAME: ${{ inputs.cpanel_username }}
+          CPANEL_USERNAME: ${{ secrets.CPANEL_ACCOUNT_USERNAME || inputs.cpanel_username }}
+          CPANEL_HOSTNAME: ${{ inputs.cpanel_hostname }}
+          CPANEL_PORT: ${{ inputs.cpanel_port }}
           COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
           COOLIFY_URL: ${{ inputs.coolify_url }}
           COOLIFY_SERVER_UUID: ${{ inputs.coolify_server_uuid }}

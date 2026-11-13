@@ -45,6 +45,8 @@ jobs:
           providers: |
             shippercli/provider-cpanel:^1.0
         env:
+          CPANEL_HOSTNAME: cpanel.example.com
+          CPANEL_PORT: 2083
           CPANEL_USERNAME: action-test
           CPANEL_API_TOKEN: action-test-token
       - name: Verify CLI is available to subsequent steps
@@ -60,6 +62,8 @@ jobs:
           providers: |
             shippercli/provider-cpanel:^1.0
         env:
+          CPANEL_HOSTNAME: cpanel.example.com
+          CPANEL_PORT: 2083
           CPANEL_USERNAME: action-test
           CPANEL_API_TOKEN: action-test-token
       - name: Verify identical constraints did not reuse the installed CLI
@@ -104,7 +108,7 @@ jobs:
       deploy: false
       project: app
       profile: production
-      cpanel_username: action-test
+      cpanel_hostname: cpanel.example.com
       working_directory: .github/actions/shipper/fixtures
       cli_version: '1.0.7'
       providers: |
@@ -113,4 +117,5 @@ jobs:
         shippercli/provider-ploi:2.0.0
         shippercli/provider-coolify:1.0.9
     secrets:
+      CPANEL_ACCOUNT_USERNAME: action-test
       CPANEL_API_TOKEN: action-test-token
